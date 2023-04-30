@@ -64,5 +64,5 @@ for epoch in range(50):
 # Evaluate the model
 with torch.no_grad():
     y_pred = model(X_test)
-    mse = nn.functional.mse_loss(y_pred, y_test.unsqueeze(1))
-    print('Test MSE: %.3f' % mse.item())
+    mae = nn.functional.l1_loss(y_pred, y_test.unsqueeze(1))
+    print('Test MAE: %.3f' % mae.item())
