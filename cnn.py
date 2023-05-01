@@ -54,8 +54,19 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 # Train the model
 for epoch in range(50):
-    outputs = model(X_train)
-    loss = criterion(outputs, y_train)
+    indices = np.arange(0,len(X_train))
+    rng = np.random.default_rng()
+    rng.shuffle(indices, 0)
+    indices = torch.tensor(indices,dtype=torch.int64)
+    ones_shape = torch.ones(60,1)
+    prod = ones_shape * indices
+    prod = torch.transpose(prod,0,1)
+    indices_for_inputs = torch.tensor(prod,dtype=torch.int64)
+    train_inputs = torch.gather(X_train, 0, indices_for_inputs)
+    train_labels = torch.gather(y_train, 0, indices)
+
+    outputs = model(train_inputs)
+    loss = criterion(outputs, train_labels)
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
