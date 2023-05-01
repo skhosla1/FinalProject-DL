@@ -15,8 +15,9 @@ data = scaler.fit_transform(percent_change_in_closing)
 # Create input/output sequences
 X = []
 y = []
-for i in range(60, len(data)):
-    X.append(data[i-60:i, 0])
+window_size = 60 # uses this number of days' data to predict the next day
+for i in range(window_size, len(data)):
+    X.append(data[i-window_size:i, 0])
     y.append(data[i, 0])
 X = torch.tensor(X).float()
 y = torch.tensor(y).float()
@@ -47,12 +48,13 @@ criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 # Train the model
-for epoch in range(100):
+num_epochs = 100
+for epoch in range(num_epochs):
     indices = np.arange(0,len(X_train))
     rng = np.random.default_rng()
     rng.shuffle(indices, 0)
     indices = torch.tensor(indices,dtype=torch.int64)
-    ones_shape = torch.ones(60,1)
+    ones_shape = torch.ones(window_size,1)
     prod = ones_shape * indices
     prod = torch.transpose(prod,0,1)
     indices_for_inputs = torch.tensor(prod,dtype=torch.int64)
@@ -66,7 +68,7 @@ for epoch in range(100):
     loss.backward()
     optimizer.step()
     if (epoch+1) % 10 == 0:
-        print('Epoch [%d/%d], Loss: %.4f' % (epoch+1, 100, loss.item()))
+        print('Epoch [%d/%d], Loss: %.4f' % (epoch+1, num_epochs, loss.item()))
 
 # Evaluate the model
 with torch.no_grad():
