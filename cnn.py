@@ -53,7 +53,7 @@ criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 # Train the model
-for epoch in range(50):
+for epoch in range(100):
     indices = np.arange(0,len(X_train))
     rng = np.random.default_rng()
     rng.shuffle(indices, 0)
@@ -71,7 +71,7 @@ for epoch in range(50):
     loss.backward()
     optimizer.step()
     if (epoch+1) % 10 == 0:
-        print('Epoch [%d/%d], Loss: %.4f' % (epoch+1, 50, loss.item()))
+        print('Epoch [%d/%d], Loss: %.4f' % (epoch+1, 100, loss.item()))
 
 # Evaluate the model
 with torch.no_grad():
