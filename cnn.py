@@ -1,15 +1,16 @@
 import torch
+import numpy as np
 import torch.nn as nn
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
 # Load the data
 df = pd.read_csv('AAPL.csv')
-data = df['Close'].values.reshape(-1, 1)
-
+data = np.array(df['Close'].values.reshape(-1, 1))
+percent_change_in_closing = (data[0:10588] - data[1:10589]) / data[0:10588]
 # Normalize the data
 scaler = MinMaxScaler()
-data = scaler.fit_transform(data)
+data = scaler.fit_transform(percent_change_in_closing)
 
 # Create input/output sequences
 X = []
