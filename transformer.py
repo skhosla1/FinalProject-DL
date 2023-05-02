@@ -44,8 +44,8 @@ class PositionalEncoding(nn.Module):
 df = pd.read_csv('AAPL.csv')
 
 # Normalize the closing price
-scaler = MinMaxScaler()
-df['Close'] = scaler.fit_transform(df[['Close']])
+# scaler = MinMaxScaler()
+# df['Close'] = scaler.fit_transform(df[['Close']])
 
 # Define the dataset class
 class StockDataset(Dataset):
