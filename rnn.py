@@ -9,8 +9,8 @@ df = pd.read_csv('AAPL.csv')
 data = np.array(df['Close'].values.reshape(-1, 1))
 percent_change_in_closing = (data[0:10588] - data[1:10589]) / data[0:10588]
 # Normalize the data
-scaler = MinMaxScaler()
-data = scaler.fit_transform(percent_change_in_closing)
+# scaler = MinMaxScaler()
+# data = scaler.fit_transform(percent_change_in_closing)
 
 # Create input/output sequences
 X = []
