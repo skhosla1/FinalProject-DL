@@ -7,7 +7,7 @@ from sklearn.preprocessing import MinMaxScaler
 # Load the data
 df = pd.read_csv('AAPL.csv')
 data = np.array(df['Close'].values.reshape(-1, 1))
-percent_change_in_closing = (data[0:10588] - data[1:10589]) / data[0:10588]
+percent_change_in_closing = (data[1:10590] - data[0:10589]) / data[0:10589]
 # Normalize the data
 # scaler = MinMaxScaler()
 # data = scaler.fit_transform(percent_change_in_closing)
@@ -16,9 +16,9 @@ percent_change_in_closing = (data[0:10588] - data[1:10589]) / data[0:10588]
 X = []
 y = []
 window_size = 60 # uses this number of days' data to predict the next day
-for i in range(window_size, len(data)):
-    X.append(data[i-window_size:i, 0])
-    y.append(data[i, 0])
+for i in range(window_size, len(data) - 1):
+    X.append(percent_change_in_closing[i-window_size:i, 0])
+    y.append(percent_change_in_closing[i, 0])
 X = torch.tensor(X).float()
 y = torch.tensor(y).float()
 
@@ -44,11 +44,11 @@ class RNN(nn.Module):
 model = RNN(input_size=1, hidden_size=64, output_size=1)
 
 # Define the loss function and optimizer
-criterion = nn.MSELoss()
+criterion = nn.L1Loss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 # Train the model
-num_epochs = 100
+num_epochs = 50
 for epoch in range(num_epochs):
     indices = np.arange(0,len(X_train))
     rng = np.random.default_rng()

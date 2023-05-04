@@ -52,11 +52,11 @@ class ConvNet(nn.Module):
 model = ConvNet()
 
 # Define the loss function and optimizer
-criterion = nn.MSELoss()
+criterion = nn.L1Loss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 # Train the model
-num_epochs = 100
+num_epochs = 50
 for epoch in range(num_epochs):
     indices = np.arange(0,len(X_train))
     rng = np.random.default_rng()
