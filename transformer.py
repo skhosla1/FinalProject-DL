@@ -45,7 +45,7 @@ y_test_tensors = torch.tensor([[label, 1-label] for label in y_test.tolist()])
 # Train the model
 model.train()
 num_epochs = 100
-batch_size = 64
+batch_size = 32
 for epoch in range(num_epochs):
     for i in range(0, len(X_train_tensors), batch_size):
         batch_X = X_train_tensors[i:i+batch_size]
