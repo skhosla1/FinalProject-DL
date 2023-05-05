@@ -32,6 +32,8 @@ class PositionalEncoding(nn.Module):
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
         div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
         pe[:, 0::2] = torch.sin(position * div_term)
+        print(pe[:, 1::2])
+        print(torch.cos(position * div_term))
         pe[:, 1::2] = torch.cos(position * div_term)
         pe = pe.unsqueeze(0).transpose(0, 1)
         self.register_buffer('pe', pe)
@@ -51,6 +53,7 @@ df = pd.read_csv('AAPL.csv')
 class StockDataset(Dataset):
     def __init__(self, data, seq_len):
         self.data = data
+        self.percent_change_in_closing = (self.data[1:,4] - self.data[0:-1,4]) / self.data[0:-1,4]
         self.seq_len = seq_len
 
     def __len__(self):
@@ -58,7 +61,7 @@ class StockDataset(Dataset):
 
     def __getitem__(self, index):
         X = self.data[index:index+self.seq_len, :]
-        y = self.data[index+self.seq_len, 3]
+        y = self.percent_change_in_closing[index+self.seq_len - 1]
         return torch.tensor(X, dtype=torch.float32), torch.tensor(y, dtype=torch.float32)
 
 # Split the dataset into train and test sets
@@ -77,9 +80,9 @@ test_loader = DataLoader(test_dataset, batch_size=batch_size)
 
 # Define the model
 input_dim = 5
-d_model = 64
+d_model = 4
 nhead = 4
-num_layers = 4
+num_layers = 1
 output_dim = 1
 model = StockTransformer(input_dim, d_model, nhead, num_layers, output_dim)
 
@@ -95,18 +98,21 @@ def custom_loss(y_pred, y_true):
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10)
 
 # Train the model with early stopping
-num_epochs = 100
+num_epochs = 50
 best_loss = float('inf')
 patience = 20
 counter = 0
 for epoch in range(num_epochs):
     train_loss = 0
+    train_batch_count = 0
+    test_batch_count = 0
     for X_batch, y_batch in train_loader:
         optimizer.zero_grad()
         y_pred = model(X_batch.transpose(0, 1))
         loss = custom_loss(y_pred.squeeze(), y_batch)
         loss.backward()
         optimizer.step()
+        train_batch_count += 1
         train_loss += loss.item()
 
     # Evaluate the model
@@ -115,6 +121,7 @@ for epoch in range(num_epochs):
         for X_test, y_test in test_loader:
             y_pred = model(X_test.transpose(0, 1))
             test_loss += custom_loss(y_pred.squeeze(), y_test)
+            test_batch_count += 1
 
         # Update the learning rate scheduler
         scheduler.step(test_loss)
@@ -132,8 +139,9 @@ for epoch in range(num_epochs):
             print('Early stopping after epoch {}'.format(epoch))
             break
 
-        if (epoch+1) % 10 == 0:
-            print('Epoch [{}/{}], Train Loss: {:.4f}, Test Loss: {:.4f}'.format(epoch+1, num_epochs, train_loss, test_loss))
+        # if (epoch+1) % 10 == 0:
+        #     print('Epoch [{}/{}], Train Loss: {:.4f}, Test Loss: {:.4f}'.format(epoch+1, num_epochs, train_loss, test_loss))
+        print('Epoch [{}/{}], Train Loss: {:.4f}, Test Loss: {:.4f}'.format(epoch+1, num_epochs, train_loss/train_batch_count, test_loss/test_batch_count))
 
 # Load the best model
 model.load_state_dict(torch.load('best_model.pt'))

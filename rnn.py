@@ -6,19 +6,19 @@ from sklearn.preprocessing import MinMaxScaler
 
 # Load the data
 df = pd.read_csv('AAPL.csv')
-data = np.array(df['Close'].values.reshape(-1, 1))
+data = np.array(df['Close'].values.reshape(-1))
 percent_change_in_closing = (data[1:10590] - data[0:10589]) / data[0:10589]
+
 # Normalize the data
-# scaler = MinMaxScaler()
-# data = scaler.fit_transform(percent_change_in_closing)
+normed_change_in_closing = np.cbrt(percent_change_in_closing) * 1.2446
 
 # Create input/output sequences
 X = []
 y = []
 window_size = 60 # uses this number of days' data to predict the next day
 for i in range(window_size, len(data) - 1):
-    X.append(percent_change_in_closing[i-window_size:i, 0])
-    y.append(percent_change_in_closing[i, 0])
+    X.append(normed_change_in_closing[i-window_size:i])
+    y.append(normed_change_in_closing[i])
 X = torch.tensor(X).float()
 y = torch.tensor(y).float()
 
@@ -67,12 +67,23 @@ for epoch in range(num_epochs):
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
-    if (epoch+1) % 10 == 0:
-        print('Epoch [%d/%d], Loss: %.4f' % (epoch+1, num_epochs, loss.item()))
+    print('Epoch [%d/%d], Loss: %.4f' % (epoch+1, num_epochs, loss.item()))
+    
+    # if (epoch+1) % 10 == 0:
+    #     print('Epoch [%d/%d], Loss: %.4f' % (epoch+1, num_epochs, loss.item()))
 
 # Evaluate the model
 with torch.no_grad():
     X_test = X_test.unsqueeze(2)
     y_pred = model(X_test)
     mae = nn.functional.l1_loss(y_pred, y_test.unsqueeze(1))
+
+    y_pred_as_percent = np.array(y_pred.tolist())
+    y_pred_as_percent = np.power(y_pred_as_percent / 1.2446, 3)
+
+    y_test_as_percent = np.array(y_test.tolist())
+    y_test_as_percent = np.power(y_test_as_percent / 1.2446, 3)
+
+    percent_loss = np.mean(np.abs(y_test_as_percent - y_pred_as_percent))
     print('Test MAE: %.3f' % mae.item())
+    print('Percent MAE: %.3f' % percent_loss)
